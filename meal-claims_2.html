@@ -378,9 +378,8 @@
   </div>
 
   <div id="actionBtns" style="display:none">
-    <div class="action-grid">
+    <div>
       <button class="btn btn-outline" onclick="downloadExcel()" id="dlBtn">⬇ Download Excel</button>
-      <button class="btn btn-dark" onclick="openGmail()">✉ Open Gmail</button>
     </div>
     <a class="clear-link" onclick="clearAll()">Clear all entries</a>
   </div>
@@ -631,28 +630,6 @@ function downloadExcel() {
   const month = getMonth();
   const wb = buildExcel();
   XLSX.writeFile(wb, `meal_claims_${month.replace(' ', '_')}.xlsx`);
-}
-
-function openGmail() {
-  if (!entries.length) { alert('No entries yet.'); return; }
-  const month = getMonth();
-  const total = entries.reduce((s, e) => s + (parseFloat(e.amount) || 0), 0);
-  const subject = encodeURIComponent(`Claims ${month}`);
-  const body = encodeURIComponent(
-    `Hi,\n\nPlease find attached my meal claims for ${month}.\n\nTotal claimable: INR ${total.toLocaleString('en-IN')}\nNumber of entries: ${entries.length}\n\nPlease let me know if you need any further information.\n\nThank you.`
-  );
-  const to = encodeURIComponent(WORK_EMAIL);
-
-  if (!lastExcelBlob) {
-    const wb = buildExcel();
-    const month2 = getMonth();
-    alert(`Please note: Gmail cannot auto-attach files from a webpage.\n\nStep 1: Download the Excel file (filename: meal_claims_${month2.replace(' ', '_')}.xlsx)\nStep 2: Attach it manually to the Gmail draft that will open.`);
-    downloadExcel();
-  }
-
-  setTimeout(() => {
-    window.open(`https://mail.google.com/mail/?view=cm&to=${to}&su=${subject}&body=${body}`, '_blank');
-  }, 800);
 }
 
 function showStatus(msg) {
