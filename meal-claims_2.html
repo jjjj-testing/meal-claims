@@ -195,13 +195,7 @@
     font-size: 13px;
     font-weight: 500;
   }
-  .entry-label img {
-    width: 32px;
-    height: 32px;
-    object-fit: cover;
-    border-radius: 4px;
-    border: 1px solid var(--border);
-  }
+ 
   .entry-del {
     background: none;
     border: none;
@@ -518,7 +512,7 @@ function renderAll() {
     <div class="entry">
       <div class="entry-top">
         <div class="entry-label">
-          ${e.thumb ? `<img src="${e.thumb}">` : ''}
+          ${e.thumb ? `<img src="${e.thumb}" style="width:100%;max-height:220px;object-fit:contain;border-radius:var(--radius-sm);border:1px solid var(--border);margin-bottom:12px;background:#f0ede8;">` : ''}
           <span>Entry ${idx + 1}</span>
         </div>
         <button class="entry-del" onclick="removeEntry(${e.id})">×</button>
