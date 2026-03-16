@@ -396,6 +396,26 @@ let entries = [];
 let counter = 0;
 let lastExcelBlob = null;
 
+function compressImage(dataUrl) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const max = 600;
+      let w = img.width, h = img.height;
+      if (w > max || h > max) {
+        if (w > h) { h = h * max / w; w = max; }
+        else { w = w * max / h; h = max; }
+      }
+      canvas.width = w;
+      canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL('image/jpeg', 0.4));
+    };
+    img.src = dataUrl;
+  });
+}
+  
 function handleFiles(files) {
   Array.from(files).forEach(file => {
     const reader = new FileReader();
@@ -433,11 +453,12 @@ async function scanReceipts() {
   for (let i = 0; i < images.length; i++) {
     showStatus(`Scanning receipt ${i + 1} of ${images.length}…`);
     try {
-      const base64 = images[i].dataUrl.split(',')[1];
-      const mediaType = images[i].file.type || 'image/jpeg';
+      const compressed = await compressImage(images[i].dataUrl);
+      const base64 = compressed.split(',')[1];
+      const mediaType = 'image/jpeg';
       const resp = await fetch('https://meal-claims-api.vercel.app/api/scan', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-api-key': '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', 'anthropic-version': '2023-06-01' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           model: 'claude-sonnet-4-20250514',
           max_tokens: 1000,
