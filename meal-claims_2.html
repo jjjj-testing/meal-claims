@@ -536,7 +536,7 @@ function renderAll() {
     <div class="entry">
       <div class="entry-top">
         <div class="entry-label">
-          ${e.thumb ? `<img src="${e.thumb}" onclick="openLightbox('${e.thumb}')" style="width:100%;max-height:220px;object-fit:contain;border-radius:var(--radius-sm);border:1px solid var(--border);margin-bottom:12px;background:#f0ede8;cursor:zoom-in;">` : ''}
+          ${e.thumb ? `<img src="${e.thumb}" onclick="openLightbox(this.src)" style="width:100%;max-height:220px;object-fit:contain;border-radius:var(--radius-sm);border:1px solid var(--border);margin-bottom:12px;background:#f0ede8;cursor:zoom-in;">` : ''}
           <span>Entry ${idx + 1}</span>
         </div>
         <button class="entry-del" onclick="removeEntry(${e.id})">×</button>
