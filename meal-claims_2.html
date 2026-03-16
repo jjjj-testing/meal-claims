@@ -435,7 +435,7 @@ async function scanReceipts() {
     try {
       const base64 = images[i].dataUrl.split(',')[1];
       const mediaType = images[i].file.type || 'image/jpeg';
-      const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      const resp = await fetch('https://meal-claims-api.vercel.app/api/scan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-api-key': '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', 'anthropic-version': '2023-06-01' },
         body: JSON.stringify({
