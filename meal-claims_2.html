@@ -415,7 +415,7 @@ function compressImage(dataUrl) {
     img.src = dataUrl;
   });
 }
-  
+
 function handleFiles(files) {
   Array.from(files).forEach(file => {
     const reader = new FileReader();
@@ -455,7 +455,6 @@ async function scanReceipts() {
     try {
       const compressed = await compressImage(images[i].dataUrl);
       const base64 = compressed.split(',')[1];
-      const mediaType = 'image/jpeg';
       const resp = await fetch('https://meal-claims-api.vercel.app/api/scan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -465,17 +464,19 @@ async function scanReceipts() {
           messages: [{
             role: 'user',
             content: [
-              { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } },
+              { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: base64 } },
               { type: 'text', text: 'Extract from this receipt: date (DD/MM/YYYY format), venue/restaurant name, and total amount paid in INR (number only, no symbol or commas). Respond ONLY with valid JSON, no markdown: {"date":"","venue":"","amount":""}. Leave fields empty string if unclear.' }
             ]
           }]
         })
       });
       const data = await resp.json();
+      console.log('API response:', JSON.stringify(data));
       const text = data.content.map(c => c.text || '').join('');
       const parsed = JSON.parse(text.replace(/```json|```/g, '').trim());
       addEntry(parsed.date || '', parsed.venue || '', parsed.amount || '', images[i].dataUrl);
     } catch (e) {
+      console.log('Error:', e.message);
       addEntry('', '', '', images[i].dataUrl);
     }
   }
