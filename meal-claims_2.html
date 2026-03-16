@@ -352,7 +352,7 @@
       <span class="icon">📷</span>
       <span class="label">Photograph or upload receipts</span>
       <span class="hint">Tap to open camera · multiple receipts supported</span>
-      <input type="file" id="fileInput" accept="image/*" multiple capture="environment" onchange="handleFiles(this.files)">
+      <input type="file" id="fileInput" accept="image/*" multiple onchange="handleFiles(this.files)">
     </div>
     <div class="previews" id="previews"></div>
     <button class="scan-btn" id="scanBtn" style="display:none" onclick="scanReceipts()">Scan with AI</button>
