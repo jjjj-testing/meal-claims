@@ -422,7 +422,11 @@ function closeLightbox() {
 }
   
 function handleFiles(files) {
+  const existing = new Set(images.map(i => i.file.name + i.file.size));
   Array.from(files).forEach(file => {
+    const key = file.name + file.size;
+    if (existing.has(key)) return;
+    existing.add(key);
     const reader = new FileReader();
     reader.onload = e => {
       images.push({ file, dataUrl: e.target.result });
