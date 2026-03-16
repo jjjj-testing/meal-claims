@@ -488,8 +488,7 @@ async function scanReceipts() {
         venue: parsed.venue_confidence ?? 1,
         amount: parsed.amount_confidence ?? 1
       };
-addEntry(parsed.date || '', parsed.venue || '', parsed.amount || '', images[i].dataUrl, confidence);
-      addEntry(parsed.date || '', parsed.venue || '', parsed.amount || '', images[i].dataUrl);
+      addEntry(parsed.date || '', parsed.venue || '', parsed.amount || '', images[i].dataUrl, confidence);
     } catch (e) {
       console.log('Error:', e.message);
       addEntry('', '', '', images[i].dataUrl);
