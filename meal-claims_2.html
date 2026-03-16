@@ -515,7 +515,14 @@ function updateField(id, field, value) {
   updateTotal();
   lastExcelBlob = null;
 }
-
+  
+function confidenceClass(score) {
+  if (score === undefined || score === null) return '';
+  if (score < 0.5) return 'field-low';
+  if (score < 0.8) return 'field-medium';
+  return '';
+}
+  
 function renderAll() {
   const hasEntries = entries.length > 0;
   document.getElementById('emptyHint').style.display = hasEntries ? 'none' : 'block';
