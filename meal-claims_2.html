@@ -253,7 +253,9 @@
     transition: background 0.15s;
   }
   .add-manual:hover { background: var(--surface); }
-
+  .field-low { background: #fff8e1; border-color: #f0d080 !important; }
+  .field-medium { background: #fff3e0; border-color: #ffb74d !important; }
+  
   .total-row {
     display: flex;
     justify-content: space-between;
@@ -458,7 +460,7 @@ async function scanReceipts() {
             role: 'user',
             content: [
               { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: base64 } },
-              { type: 'text', text: 'Extract from this receipt: date (DD/MM/YYYY format), venue/restaurant name, and total amount paid in INR (number only, no symbol or commas). Respond ONLY with valid JSON, no markdown: {"date":"","venue":"","amount":""}. Leave fields empty string if unclear.' }
+              { type: 'text', text: 'You are extracting data from a meal or restaurant receipt. Extract: (1) DATE - look for the date printed on the receipt and convert to DD/MM/YYYY format regardless of how it appears on the receipt; (2) VENUE - the restaurant or establishment name, usually printed prominently at the top; (3) AMOUNT - the final total amount actually paid, look for words like "Total", "Grand Total", "Amount Due", "Net Total", "Balance Due" - return the number only with no currency symbols, commas or spaces. Also return a confidence score for each field from 0 to 1 indicating how certain you are. Respond ONLY with valid JSON, no markdown, no explanation: {"date":"","venue":"","amount":"","date_confidence":1,"venue_confidence":1,"amount_confidence":1}. If any field is genuinely unclear leave it as empty string and set confidence to 0.' }
             ]
           }]
         })
@@ -467,6 +469,12 @@ async function scanReceipts() {
       console.log('API response:', JSON.stringify(data));
       const text = data.content.map(c => c.text || '').join('');
       const parsed = JSON.parse(text.replace(/```json|```/g, '').trim());
+      const confidence = {
+        date: parsed.date_confidence ?? 1,
+        venue: parsed.venue_confidence ?? 1,
+        amount: parsed.amount_confidence ?? 1
+      };
+addEntry(parsed.date || '', parsed.venue || '', parsed.amount || '', images[i].dataUrl, confidence);
       addEntry(parsed.date || '', parsed.venue || '', parsed.amount || '', images[i].dataUrl);
     } catch (e) {
       console.log('Error:', e.message);
@@ -481,9 +489,9 @@ async function scanReceipts() {
   hideStatus();
 }
 
-function addEntry(date = '', venue = '', amount = '', thumb = '') {
+function addEntry(date = '', venue = '', amount = '', thumb = '', confidence = {}) {
   const id = ++counter;
-  entries.push({ id, date, venue, amount, occasion: '', pax: '', alcohol: '', tips: '', remarks: '', thumb });
+  entries.push({ id, date, venue, amount, occasion: '', pax: '', alcohol: '', tips: '', remarks: '', thumb, confidence });
   renderAll();
 }
 
@@ -521,17 +529,17 @@ function renderAll() {
         <div class="row2">
           <div class="field">
             <label>Date</label>
-            <input type="text" placeholder="DD/MM/YYYY" value="${e.date}" oninput="updateField(${e.id},'date',this.value)">
+            <input type="text" placeholder="DD/MM/YYYY" value="${e.date}" class="${confidenceClass(e.confidence?.date)}" oninput="updateField(${e.id},'date',this.value)">
           </div>
           <div class="field">
             <label>Venue</label>
-            <input type="text" placeholder="Restaurant name" value="${e.venue}" oninput="updateField(${e.id},'venue',this.value)">
+            <input type="text" placeholder="Venue name" value="${e.venue}" class="${confidenceClass(e.confidence?.venue)}" oninput="updateField(${e.id},'venue',this.value)">
           </div>
         </div>
         <div class="row2">
           <div class="field">
             <label>Cost in INR</label>
-            <input type="number" placeholder="0" value="${e.amount}" oninput="updateField(${e.id},'amount',this.value)">
+            <input type="number" placeholder="0" value="${e.amount}" class="${confidenceClass(e.confidence?.amount)}" oninput="updateField(${e.id},'amount',this.value)">
           </div>
           <div class="field">
             <label>Occasion</label>
