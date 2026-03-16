@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Meal Claims</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --bg: #f7f6f3;
+    --surface: #ffffff;
+    --border: #e8e6e1;
+    --border-strong: #d4d0c8;
+    --text: #1a1917;
+    --text-secondary: #6b6760;
+    --text-tertiary: #a09d97;
+    --accent: #1a1917;
+    --danger: #c0392b;
+    --success: #2d6a4f;
+    --warning-bg: #fef9ec;
+    --warning-border: #f0d080;
+    --radius: 10px;
+    --radius-sm: 6px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+  .page {
+    max-width: 560px;
+    margin: 0 auto;
+    padding: 2rem 1rem 4rem;
+  }
+  header {
+    margin-bottom: 2rem;
+  }
+  header h1 {
+    font-size: 22px;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    margin-bottom: 2px;
+  }
+  header p {
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+
+  .section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+  }
+
+  .upload-zone {
+    border: 1.5px dashed var(--border-strong);
+    border-radius: var(--radius-sm);
+    padding: 1.75rem 1rem;
+    text-align: center;
+    cursor: pointer;
+    transition: background 0.15s;
+    margin-bottom: 1rem;
+  }
+  .upload-zone:active { background: var(--bg); }
+  .upload-zone input { display: none; }
+  .upload-zone .icon {
+    font-size: 24px;
+    margin-bottom: 6px;
+    display: block;
+  }
+  .upload-zone .label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    display: block;
+    margin-bottom: 2px;
+  }
+  .upload-zone .hint {
+    font-size: 12px;
+    color: var(--text-tertiary);
+  }
+
+  .previews {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 1rem;
+  }
+  .preview-wrap {
+    position: relative;
+    width: 68px;
+    height: 68px;
+  }
+  .preview-wrap img {
+    width: 68px;
+    height: 68px;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    display: block;
+  }
+  .preview-wrap button {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--text);
+    color: #fff;
+    border: none;
+    font-size: 11px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+  }
+
+  .scan-btn {
+    width: 100%;
+    padding: 11px;
+    background: var(--text);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .scan-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .status {
+    font-size: 13px;
+    color: var(--text-secondary);
+    background: var(--warning-bg);
+    border: 1px solid var(--warning-border);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    margin-bottom: 1rem;
+    display: none;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .entries-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+  .entries-header span {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .entries-header button {
+    font-size: 12px;
+    color: var(--text-secondary);
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 4px 10px;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .entry {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    margin-bottom: 10px;
+  }
+  .entry-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+  }
+  .entry-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .entry-label img {
+    width: 32px;
+    height: 32px;
+    object-fit: cover;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+  }
+  .entry-del {
+    background: none;
+    border: none;
+    color: var(--text-tertiary);
+    font-size: 18px;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0 2px;
+  }
+  .entry-body {
+    padding: 12px;
+    background: var(--surface);
+  }
+  .row2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .row2:last-child { margin-bottom: 0; }
+  .field { display: flex; flex-direction: column; gap: 3px; }
+  .field label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--text-tertiary);
+    font-weight: 500;
+  }
+  .field input {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: var(--text);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 8px 10px;
+    width: 100%;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .field input:focus { border-color: var(--border-strong); }
+  .field input::placeholder { color: var(--text-tertiary); }
+
+  .add-manual {
+    width: 100%;
+    padding: 11px;
+    background: none;
+    border: 1.5px dashed var(--border-strong);
+    border-radius: var(--radius-sm);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    margin-top: 4px;
+    transition: background 0.15s;
+  }
+  .add-manual:hover { background: var(--surface); }
+
+  .total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 1rem 1.25rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 1rem;
+  }
+  .total-row .label {
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+  .total-row .amount {
+    font-size: 20px;
+    font-weight: 500;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: -0.02em;
+  }
+
+  .action-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .btn {
+    padding: 13px;
+    border-radius: var(--radius-sm);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: opacity 0.15s, transform 0.1s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .btn:active { transform: scale(0.98); }
+  .btn-dark {
+    background: var(--text);
+    color: #fff;
+  }
+  .btn-outline {
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border-strong);
+  }
+  .btn-gmail {
+    width: 100%;
+    background: #fff;
+    color: #444;
+    border: 1px solid var(--border-strong);
+  }
+  .btn-gmail svg { flex-shrink: 0; }
+
+  .clear-link {
+    display: block;
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-tertiary);
+    cursor: pointer;
+    padding: 8px;
+    text-decoration: none;
+    margin-top: 4px;
+  }
+  .clear-link:hover { color: var(--danger); }
+
+  .empty-state {
+    text-align: center;
+    padding: 2rem 0 1rem;
+    color: var(--text-tertiary);
+    font-size: 14px;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <h1>Meal Claims</h1>
+    <p>Photograph receipts · verify · export</p>
+  </header>
+
+  <div class="section">
+    <div class="upload-zone" onclick="document.getElementById('fileInput').click()">
+      <span class="icon">📷</span>
+      <span class="label">Photograph or upload receipts</span>
+      <span class="hint">Tap to open camera · multiple receipts supported</span>
+      <input type="file" id="fileInput" accept="image/*" multiple capture="environment" onchange="handleFiles(this.files)">
+    </div>
+    <div class="previews" id="previews"></div>
+    <button class="scan-btn" id="scanBtn" style="display:none" onclick="scanReceipts()">Scan with AI</button>
+  </div>
+
+  <div class="status" id="status"></div>
+
+  <div id="entriesSection" style="display:none">
+    <div class="entries-header">
+      <span>Entries</span>
+    </div>
+    <div id="entries"></div>
+    <button class="add-manual" onclick="addEntry()">+ Add entry manually</button>
+  </div>
+
+  <div id="emptyHint" class="empty-state">No entries yet — scan a receipt or add manually</div>
+
+  <button class="add-manual" id="addManualTop" onclick="addEntry()" style="margin-bottom:1rem;display:none">+ Add entry manually</button>
+
+  <div class="total-row" id="totalRow" style="display:none">
+    <span class="label">Total claimable (INR)</span>
+    <span class="amount" id="grandTotal">₹0</span>
+  </div>
+
+  <div id="actionBtns" style="display:none">
+    <div class="action-grid">
+      <button class="btn btn-outline" onclick="downloadExcel()" id="dlBtn">⬇ Download Excel</button>
+      <button class="btn btn-dark" onclick="openGmail()">✉ Open Gmail</button>
+    </div>
+    <a class="clear-link" onclick="clearAll()">Clear all entries</a>
+  </div>
+
+</div>
+
+<script>
+const WORK_EMAIL = 'joshua_hc_lim@mfa.gov.sg';
+const RATE = 70.73;
+
+let images = [];
+let entries = [];
+let counter = 0;
+let lastExcelBlob = null;
+
+function handleFiles(files) {
+  Array.from(files).forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      images.push({ file, dataUrl: e.target.result });
+      renderPreviews();
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function renderPreviews() {
+  const el = document.getElementById('previews');
+  el.innerHTML = images.map((img, i) => `
+    <div class="preview-wrap">
+      <img src="${img.dataUrl}">
+      <button onclick="removeImage(${i})">×</button>
+    </div>
+  `).join('');
+  document.getElementById('scanBtn').style.display = images.length ? 'block' : 'none';
+}
+
+function removeImage(i) {
+  images.splice(i, 1);
+  renderPreviews();
+}
+
+async function scanReceipts() {
+  if (!images.length) return;
+  const btn = document.getElementById('scanBtn');
+  btn.disabled = true;
+  btn.textContent = 'Scanning…';
+  showStatus('Reading receipts…');
+
+  for (let i = 0; i < images.length; i++) {
+    showStatus(`Scanning receipt ${i + 1} of ${images.length}…`);
+    try {
+      const base64 = images[i].dataUrl.split(',')[1];
+      const mediaType = images[i].file.type || 'image/jpeg';
+      const resp = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-api-key': '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', 'anthropic-version': '2023-06-01' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1000,
+          messages: [{
+            role: 'user',
+            content: [
+              { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } },
+              { type: 'text', text: 'Extract from this receipt: date (DD/MM/YYYY format), venue/restaurant name, and total amount paid in INR (number only, no symbol or commas). Respond ONLY with valid JSON, no markdown: {"date":"","venue":"","amount":""}. Leave fields empty string if unclear.' }
+            ]
+          }]
+        })
+      });
+      const data = await resp.json();
+      const text = data.content.map(c => c.text || '').join('');
+      const parsed = JSON.parse(text.replace(/```json|```/g, '').trim());
+      addEntry(parsed.date || '', parsed.venue || '', parsed.amount || '', images[i].dataUrl);
+    } catch (e) {
+      addEntry('', '', '', images[i].dataUrl);
+    }
+  }
+
+  images = [];
+  renderPreviews();
+  btn.disabled = false;
+  btn.textContent = 'Scan with AI';
+  hideStatus();
+}
+
+function addEntry(date = '', venue = '', amount = '', thumb = '') {
+  const id = ++counter;
+  entries.push({ id, date, venue, amount, occasion: '', pax: '', alcohol: '', tips: '', remarks: '', thumb });
+  renderAll();
+}
+
+function removeEntry(id) {
+  entries = entries.filter(e => e.id !== id);
+  renderAll();
+}
+
+function updateField(id, field, value) {
+  const e = entries.find(e => e.id === id);
+  if (e) e[field] = value;
+  updateTotal();
+  lastExcelBlob = null;
+}
+
+function renderAll() {
+  const hasEntries = entries.length > 0;
+  document.getElementById('emptyHint').style.display = hasEntries ? 'none' : 'block';
+  document.getElementById('entriesSection').style.display = hasEntries ? 'block' : 'none';
+  document.getElementById('totalRow').style.display = hasEntries ? 'flex' : 'none';
+  document.getElementById('actionBtns').style.display = hasEntries ? 'block' : 'none';
+
+  if (!hasEntries) return;
+
+  document.getElementById('entries').innerHTML = entries.map((e, idx) => `
+    <div class="entry">
+      <div class="entry-top">
+        <div class="entry-label">
+          ${e.thumb ? `<img src="${e.thumb}">` : ''}
+          <span>Entry ${idx + 1}</span>
+        </div>
+        <button class="entry-del" onclick="removeEntry(${e.id})">×</button>
+      </div>
+      <div class="entry-body">
+        <div class="row2">
+          <div class="field">
+            <label>Date</label>
+            <input type="text" placeholder="DD/MM/YYYY" value="${e.date}" oninput="updateField(${e.id},'date',this.value)">
+          </div>
+          <div class="field">
+            <label>Venue</label>
+            <input type="text" placeholder="Restaurant name" value="${e.venue}" oninput="updateField(${e.id},'venue',this.value)">
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label>Cost in INR</label>
+            <input type="number" placeholder="0" value="${e.amount}" oninput="updateField(${e.id},'amount',this.value)">
+          </div>
+          <div class="field">
+            <label>Occasion</label>
+            <input type="text" placeholder="e.g. Working lunch" value="${e.occasion}" oninput="updateField(${e.id},'occasion',this.value)">
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label>No. of Pax</label>
+            <input type="number" placeholder="1" value="${e.pax}" oninput="updateField(${e.id},'pax',this.value)">
+          </div>
+          <div class="field">
+            <label>Tips (INR)</label>
+            <input type="number" placeholder="0" value="${e.tips}" oninput="updateField(${e.id},'tips',this.value)">
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label>Alcohol / Corkage (INR)</label>
+            <input type="number" placeholder="0" value="${e.alcohol}" oninput="updateField(${e.id},'alcohol',this.value)">
+          </div>
+          <div class="field">
+            <label>Remarks</label>
+            <input type="text" placeholder="Optional" value="${e.remarks}" oninput="updateField(${e.id},'remarks',this.value)">
+          </div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+
+  updateTotal();
+}
+
+function updateTotal() {
+  const total = entries.reduce((s, e) => s + (parseFloat(e.amount) || 0), 0);
+  document.getElementById('grandTotal').textContent = '₹' + total.toLocaleString('en-IN');
+}
+
+function getMonth() {
+  const dates = entries.map(e => e.date).filter(Boolean);
+  if (!dates.length) return new Date().toLocaleString('en-GB', { month: 'long', year: 'numeric' });
+  const parsed = dates.map(d => {
+    const parts = d.split('/');
+    if (parts.length === 3) return new Date(parts[2], parts[1] - 1, parts[0]);
+    return null;
+  }).filter(Boolean);
+  if (!parsed.length) return new Date().toLocaleString('en-GB', { month: 'long', year: 'numeric' });
+  parsed.sort((a, b) => a - b);
+  const mid = parsed[Math.floor(parsed.length / 2)];
+  return mid.toLocaleString('en-GB', { month: 'long', year: 'numeric' });
+}
+
+function parseDate(str) {
+  if (!str) return new Date(9999, 0, 1);
+  const parts = str.split('/');
+  if (parts.length === 3) return new Date(parts[2], parts[1] - 1, parts[0]);
+  return new Date(9999, 0, 1);
+}
+
+function buildExcel() {
+  const headers = [
+    'Date', 'Venue', 'Occasion', 'No. of Pax (Inclusive of Host)',
+    'Cost in INR\n(as per the Bill)',
+    "Cost of Mission's Alcohol and Corkage charge\n(if any)",
+    'Tips (if any)', 'Total Amount Claimable (INR)', 'Remarks',
+    `Total Amount (SGD)\nFixed iFOMS Exchange Rate for FY26\nS$1 to INR ${RATE}`,
+    'SGD per pax (Cost/Total pax/Rate)'
+  ];
+  const sorted = [...entries].sort((a, b) => parseDate(a.date) - parseDate(b.date));
+  const rows = sorted.map(e => {
+    const amt = parseFloat(e.amount) || 0;
+    const pax = parseInt(e.pax) || 1;
+    const sgd = parseFloat((amt / RATE).toFixed(2));
+    const sgdPax = parseFloat((sgd / pax).toFixed(2));
+    return [e.date, e.venue, e.occasion, e.pax || '', amt,
+      parseFloat(e.alcohol) || '', parseFloat(e.tips) || '',
+      amt, e.remarks, sgd, sgdPax];
+  });
+  const totalAmt = entries.reduce((s, e) => s + (parseFloat(e.amount) || 0), 0);
+  const totalRow = ['', '', '', '', '', '', 'Total', totalAmt, '', '', ''];
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet([headers, ...rows, totalRow]);
+  ws['!cols'] = [12,22,16,10,12,14,10,14,14,14,14].map(w => ({ wch: w }));
+  XLSX.utils.book_append_sheet(wb, ws, 'Claims');
+  return wb;
+}
+
+function downloadExcel() {
+  if (!entries.length) { alert('No entries to export.'); return; }
+  const month = getMonth();
+  const wb = buildExcel();
+  XLSX.writeFile(wb, `meal_claims_${month.replace(' ', '_')}.xlsx`);
+}
+
+function openGmail() {
+  if (!entries.length) { alert('No entries yet.'); return; }
+  const month = getMonth();
+  const total = entries.reduce((s, e) => s + (parseFloat(e.amount) || 0), 0);
+  const subject = encodeURIComponent(`Claims ${month}`);
+  const body = encodeURIComponent(
+    `Hi,\n\nPlease find attached my meal claims for ${month}.\n\nTotal claimable: INR ${total.toLocaleString('en-IN')}\nNumber of entries: ${entries.length}\n\nPlease let me know if you need any further information.\n\nThank you.`
+  );
+  const to = encodeURIComponent(WORK_EMAIL);
+
+  if (!lastExcelBlob) {
+    const wb = buildExcel();
+    const month2 = getMonth();
+    alert(`Please note: Gmail cannot auto-attach files from a webpage.\n\nStep 1: Download the Excel file (filename: meal_claims_${month2.replace(' ', '_')}.xlsx)\nStep 2: Attach it manually to the Gmail draft that will open.`);
+    downloadExcel();
+  }
+
+  setTimeout(() => {
+    window.open(`https://mail.google.com/mail/?view=cm&to=${to}&su=${subject}&body=${body}`, '_blank');
+  }, 800);
+}
+
+function showStatus(msg) {
+  const el = document.getElementById('status');
+  el.style.display = 'block';
+  el.textContent = msg;
+}
+
+function hideStatus() {
+  document.getElementById('status').style.display = 'none';
+}
+
+function clearAll() {
+  if (entries.length && !confirm('Clear all entries?')) return;
+  entries = [];
+  images = [];
+  counter = 0;
+  lastExcelBlob = null;
+  renderPreviews();
+  renderAll();
+}
+
+renderAll();
+</script>
+</body>
+</html>
