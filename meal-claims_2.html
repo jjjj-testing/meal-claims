@@ -253,8 +253,8 @@
     transition: background 0.15s;
   }
   .add-manual:hover { background: var(--surface); }
-  .field-low { background: #fff8e1; border-color: #f0d080 !important; }
-  .field-medium { background: #fff3e0; border-color: #ffb74d !important; }
+ .field-low { background: #fff3cd; border: 2px solid #f0a500 !important; color: #7a4f00; }
+ .field-medium { background: #fff8e1; border: 1.5px solid #f0d080 !important; }
   
   .total-row {
     display: flex;
@@ -357,6 +357,7 @@
   <div class="status" id="status"></div>
 
   <div id="entriesSection" style="display:none">
+  <div style="font-size:13px;color:#7a4f00;background:#fff3cd;border:1px solid #f0a500;border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:1rem;">⚠ AI extraction may not be 100% accurate — please verify all fields before downloading, especially dates.</div>
     <div class="entries-header">
       <span>Entries</span>
     </div>
